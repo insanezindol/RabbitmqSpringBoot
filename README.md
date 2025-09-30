@@ -154,7 +154,3 @@ RabbitMQ Management UI를 통해 메시지 상태를 모니터링할 수 있습�
 -   [Spring AMQP 공식 문서](https://docs.spring.io/spring-amqp/docs/current/reference/html/)
 -   [RabbitMQ 공식 문서](https://www.rabbitmq.com/documentation.html)
 -   [Spring Boot AMQP 가이드](https://spring.io/guides/gs/messaging-rabbitmq/)
-
-## 📝 라이선스
-
-이 프로젝트는 학습 및 참고 목적으로 제작되었습니다.
