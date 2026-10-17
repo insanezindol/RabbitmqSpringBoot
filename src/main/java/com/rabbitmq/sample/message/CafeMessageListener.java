@@ -4,12 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 @Slf4j
 @Component
-@EnableAsync
 public class CafeMessageListener {
 
     @Async
@@ -17,11 +18,12 @@ public class CafeMessageListener {
     public void receiveMessage(final Message message) {
         log.info("receiveMessage : {}", message);
         try {
-            Thread.sleep(10000);
+            Thread.sleep(Duration.ofSeconds(10));
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
+            log.warn("receiveMessage interrupted", e);
         }
-        String body = new String(message.getBody());
+        String body = new String(message.getBody(), StandardCharsets.UTF_8);
         log.info("body : {}", body);
     }
 

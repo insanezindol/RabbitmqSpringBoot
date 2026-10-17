@@ -2,11 +2,11 @@ package com.rabbitmq.sample.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Slf4j
-@EnableAsync
 @Service
 public class RabbitService {
 
@@ -14,9 +14,10 @@ public class RabbitService {
     public void ayncServiceTest() {
         log.info("[BEG] ayncServiceTest");
         try {
-            Thread.sleep(10000);
+            Thread.sleep(Duration.ofSeconds(10));
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
+            log.warn("ayncServiceTest interrupted", e);
         }
         log.info("[END] ayncServiceTest");
     }

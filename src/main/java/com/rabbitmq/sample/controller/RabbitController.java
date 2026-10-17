@@ -1,26 +1,27 @@
 package com.rabbitmq.sample.controller;
 
 import com.rabbitmq.sample.service.RabbitService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+
 @Slf4j
 @RestController
 @RequestMapping("/rabbit")
+@RequiredArgsConstructor
 public class RabbitController {
 
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    RabbitService rabbitService;
+    private final RabbitService rabbitService;
 
     @GetMapping("/pub/str")
     public String pubStr() {
@@ -33,7 +34,7 @@ public class RabbitController {
         String json = "{\"shoes\":\"nike\"}";
 
         Message message = MessageBuilder
-                .withBody(json.getBytes())
+                .withBody(json.getBytes(StandardCharsets.UTF_8))
                 .setContentType(MessageProperties.CONTENT_TYPE_JSON)
                 .build();
 

@@ -4,22 +4,23 @@ Spring Boot와 RabbitMQ를 사용한 메시지 큐 시스템 샘플 프로젝트
 
 ## 📋 프로젝트 개요
 
-이 프로젝트는 Spring Boot 2.3.3과 RabbitMQ를 활용하여 비동기 메시지 처리 시스템을 구현한 샘플 애플리케이션입니다. 카페 주문 시스템을 모델로 하여 메시지 발행(Producer)과 구독(Consumer) 패턴을 보여줍니다.
+이 프로젝트는 Spring Boot 4.1과 RabbitMQ 4를 활용하여 비동기 메시지 처리 시스템을 구현한 샘플 애플리케이션입니다. 카페 주문 시스템을 모델로 하여 메시지 발행(Producer)과 구독(Consumer) 패턴을 보여줍니다.
 
 ## 🛠 기술 스택
 
--   **Java**: 1.8
--   **Spring Boot**: 2.3.3.RELEASE
--   **Spring AMQP**: RabbitMQ 메시지 처리
--   **RabbitMQ**: 메시지 브로커
--   **Lombok**: 코드 간소화
--   **Maven**: 빌드 도구
+-   **Java**: 25
+-   **Spring Boot**: 4.1.1 (Spring Framework 7.0.9)
+-   **Spring AMQP**: 4.1.1 (RabbitMQ 메시지 처리)
+-   **Jackson**: 3.x (`JacksonJsonMessageConverter`)
+-   **RabbitMQ**: 4.x (메시지 브로커)
+-   **Lombok**: 1.18.46 (코드 간소화)
+-   **Maven**: 3.9.16 (Maven Wrapper 3.3.4)
 
 ## 📁 프로젝트 구조
 
 ```
 src/main/java/com/rabbitmq/sample/
-├── SampleApplication.java          # Spring Boot 메인 애플리케이션
+├── SampleApplication.java          # Spring Boot 메인 애플리케이션 (@EnableAsync)
 ├── config/
 │   └── RabbitConfig.java          # RabbitMQ 설정
 ├── controller/
@@ -35,8 +36,11 @@ src/main/java/com/rabbitmq/sample/
 ### Queue 설정
 
 -   **Exchange**: `cafe.topic` (Topic Exchange)
--   **Queue**: `coffee.queue`
+-   **Queue**: `coffee.queue` (Durable)
 -   **Routing Key**: `order.coffee.#`
+
+> RabbitMQ 4.x부터는 non-durable(transient) + non-exclusive 큐가 지원되지 않아 `coffee.queue`를 durable 큐로 선언합니다.
+> 기존 RabbitMQ 3.x 브로커에 non-durable `coffee.queue`가 이미 있다면 `PRECONDITION_FAILED` 오류가 나므로, 큐를 삭제한 뒤 다시 실행하세요.
 
 ### 연결 설정 (application.yml)
 
@@ -51,6 +55,23 @@ spring:
 
 ## 🚀 실행 방법
 
+### 0. 사전 요구사항
+
+-   **JDK 25** 이상 (Maven은 Maven Wrapper가 자동으로 내려받으므로 별도 설치 불필요)
+-   여러 JDK가 설치되어 있다면 `JAVA_HOME`이 JDK 25를 가리키는지 확인하세요.
+
+```powershell
+# Windows (PowerShell)
+$env:JAVA_HOME = "C:\java\jdk-25.0.4.1"
+.\mvnw.cmd -v   # Java version: 25.x 확인
+```
+
+```bash
+# macOS / Linux / Git Bash
+export JAVA_HOME=/path/to/jdk-25
+./mvnw -v
+```
+
 ### 1. RabbitMQ 서버 설치 및 실행
 
 #### Docker를 사용하는 경우:
@@ -59,12 +80,12 @@ spring:
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 \
   -e RABBITMQ_DEFAULT_USER=rabbitmq \
   -e RABBITMQ_DEFAULT_PASS=1234 \
-  rabbitmq:3-management
+  rabbitmq:4-management
 ```
 
 #### 로컬 설치:
 
--   [RabbitMQ 공식 사이트](https://www.rabbitmq.com/download.html)에서 다운로드
+-   [RabbitMQ 공식 사이트](https://www.rabbitmq.com/docs/download)에서 다운로드
 -   사용자명: `rabbitmq`, 비밀번호: `1234`로 설정
 
 ### 2. 애플리케이션 실행
@@ -119,10 +140,11 @@ GET http://localhost:8081/rabbit/async
 -   `CafeMessageListener`에서 `@RabbitListener` 어노테이션을 사용한 메시지 수신
 -   비동기 처리 (`@Async`)
 -   10초 지연 처리로 비동기 동작 시뮬레이션
+-   `JacksonJsonMessageConverter`(Jackson 3)로 객체 ↔ JSON 메시지 변환
 
 ### 비동기 처리
 
--   `@EnableAsync`와 `@Async` 어노테이션을 사용한 비동기 처리
+-   `SampleApplication`의 `@EnableAsync`와 `@Async` 어노테이션을 사용한 비동기 처리
 -   논블로킹 메시지 처리
 
 ## 🔍 메시지 플로우
@@ -142,7 +164,7 @@ RabbitMQ Management UI를 통해 메시지 상태를 모니터링할 수 있습�
 ## 🧪 테스트
 
 ```bash
-# 단위 테스트 실행
+# 단위 테스트 실행 (@SpringBootTest 컨텍스트 로딩 시 RabbitMQ 연결이 필요하므로 브로커를 먼저 실행하세요)
 ./mvnw test
 
 # 특정 테스트 클래스 실행
@@ -151,6 +173,7 @@ RabbitMQ Management UI를 통해 메시지 상태를 모니터링할 수 있습�
 
 ## 📚 참고 자료
 
--   [Spring AMQP 공식 문서](https://docs.spring.io/spring-amqp/docs/current/reference/html/)
--   [RabbitMQ 공식 문서](https://www.rabbitmq.com/documentation.html)
+-   [Spring AMQP 공식 문서](https://docs.spring.io/spring-amqp/reference/)
+-   [RabbitMQ 공식 문서](https://www.rabbitmq.com/docs)
+-   [Spring Boot 4.0 Migration Guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide)
 -   [Spring Boot AMQP 가이드](https://spring.io/guides/gs/messaging-rabbitmq/)
